@@ -29,7 +29,7 @@ const User = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'EBook'
     }],
-    cart: [{
+    ownedEBooks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'EBook'
     }]

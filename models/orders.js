@@ -7,15 +7,11 @@ const orderSchema = new Schema({
         ref: 'User',
         required: true
     },
-    ebook: {
+    ebooks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'EBook',
         required: true
-    },
-    status: {
-        type: Boolean,
-        default: false
-    },
+    }],
     payment: {
         type: String,
         required: true
