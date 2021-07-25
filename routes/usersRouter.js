@@ -76,8 +76,8 @@ router.put('/password', authenticate.loggedIn, (req, res, next) => {
     })
 
 /*
-POST to add favorite ebook
-DELETE to delete a favorite ebook
+POST to add favorite ebook - STABLE
+DELETE to delete a favorite ebook - STABLE
 */
 router.route('/favorite')
     .post(authenticate.loggedIn, (req, res, next) => {

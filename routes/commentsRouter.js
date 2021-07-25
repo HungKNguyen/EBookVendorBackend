@@ -4,10 +4,10 @@ var Comments = require('../models/comments');
 var authenticate = require('../authenticate');
 
 /*
-GET to get all comments of a book
-POST to post a comment on a book
-PUT to modify your own comment
-DELETE to delete your own comment
+GET to get all comments of a book - STABLE
+POST to post a comment on a book - STABLE
+PUT to modify your own comment - STABLE
+DELETE to delete your own comment - STABLE
  */
 router.route('/')
     .get( (req, res, next) => {
@@ -74,7 +74,7 @@ router.route('/')
             },(err) => next(err))
     })
 
-/* DELETE admin force delete*/
+/* DELETE admin force delete - STABLE */
 router.delete('/admin', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
     Comments.findByIdAndRemove(req.body.commentId)
         .then((resp) => {
