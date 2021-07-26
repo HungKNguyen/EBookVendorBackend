@@ -20,7 +20,9 @@ router.get('/supersecret', authenticate.loggedIn, authenticate.isAdmin, function
 /* POST request to login - STABLE*/
 router.post('/login', authenticate.logInLocal,
     function(req, res) {
+        let token = authenticate.getToken({_id: req.user._id});
         res.statusCode = 200;
+        res.cookie('jwt', token, {httpOnly: true, maxAge: 24 * 3600 * 1000})
         res.setHeader('Content-Type', 'application/json');
         res.json({success: true, status: 'You are successfully logged in!'});
     }
@@ -30,6 +32,7 @@ router.post('/login', authenticate.logInLocal,
 router.get('/logout', function(req, res){
     req.logout();
     res.statusCode = 200;
+    res.cookie('jwt', "", {httpOnly: true, maxAge: 1})
     res.setHeader('Content-Type', 'application/json');
     res.json({success: true, status: 'You are successfully logged out!'});
 });
@@ -57,7 +60,9 @@ router.post('/signup',function(req,res,next) {
                     return ;
                 }
                 authenticate.logInLocal(req, res, () => {
+                    let token = authenticate.getToken({_id: req.user._id});
                     res.statusCode = 200;
+                    res.cookie('jwt', token, {httpOnly: true, maxAge: 24 * 3600 * 1000})
                     res.setHeader('Content-Type', 'application/json');
                     res.json({success: true, status: 'Registration Successful!'});
                 });

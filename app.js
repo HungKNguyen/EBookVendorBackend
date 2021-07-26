@@ -4,7 +4,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require("body-parser")
 var logger = require('morgan');
 var config = require('./config');
-var session = require('express-session');
+// var session = require('express-session');
 var passport = require('passport');
 
 
@@ -39,11 +39,11 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({
-  secret: 'ebook is the future',
-  resave: false,
-  saveUninitialized: true
-}));
+// app.use(session({
+//   secret: 'ebook is the future',
+//   resave: false,
+//   saveUninitialized: true
+// }));
 app.use(passport.initialize());
 app.use(passport.session());
 
