@@ -11,8 +11,7 @@ const ebookSchema = new Schema({
         required: true
     },
     image: {
-        type: String,
-        required: true
+        type: String
     },
     price: {
         type: Number,
@@ -23,13 +22,13 @@ const ebookSchema = new Schema({
     },
     ISBN: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
-    comments: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Comment'
-    }]
-
+    sold: {
+        type: Number,
+        default: 0
+    }
 }, {
     timestamps: true
 })
