@@ -70,4 +70,13 @@ router.route('/')
             }, (err) => next(err))
     })
 
+router.route('/favourite')
+    .get((req, res, next) => {
+        Ebooks.aggregate([
+            {$sort: {liked: -1}},
+            {$limit: 3},
+            {match: {liked: {$gt: 1}}}
+        ])
+    })
+
 module.exports = router;

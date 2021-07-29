@@ -28,7 +28,11 @@ const ebookSchema = new Schema({
     sold: {
         type: Number,
         default: 0
-    }
+    },
+    liked: {
+        type: Number,
+        default: 0
+    },
 }, {
     timestamps: true
 })
