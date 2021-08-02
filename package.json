@@ -6,6 +6,9 @@
     "start": "node ./bin/www",
     "test": "mocha --recursive --exit --timeout 10000"
   },
+  "pre-commit": [
+    "test"
+  ],
   "dependencies": {
     "body-parser": "^1.18.3",
     "cookie-parser": "~1.4.4",
