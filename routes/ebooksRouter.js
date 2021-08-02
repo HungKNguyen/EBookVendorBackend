@@ -15,7 +15,6 @@ router.route('/ebook')
             .then((ebooks) => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
-                console.log("this is " + ebooks);
                 res.json(ebooks);
             }, (err) => next(err))
     })

@@ -28,6 +28,7 @@ const User = new Schema({
     favEBooks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'EBook',
+        required: true
     }],
     ownedEBooks: [{
         type: mongoose.Schema.Types.ObjectId,
