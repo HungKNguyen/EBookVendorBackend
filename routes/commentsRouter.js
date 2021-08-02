@@ -15,7 +15,6 @@ router.route('/')
             .populate('user', ['firstname', 'lastname', 'image'])
             .then((comments) => {
                 res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
                 res.json(comments);
             }, (err) => next(err))
     })
@@ -23,7 +22,6 @@ router.route('/')
         Comments.create({user: req.user._id, ebook: req.body.ebookId, rating: req.body.rating, comment: req.body.comment})
             .then((comment) => {
                 res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
                 res.json(comment);
             }, (err) => next(err))
     })
@@ -42,13 +40,11 @@ router.route('/')
                             next(err);
                         } else {
                             res.statusCode = 200
-                            res.setHeader('Content-Type', 'application/json');
                             res.json(comment);
                         }
                     })
                 } else {
                     res.statusCode = 403
-                    res.setHeader('Content-Type', 'application/json');
                     res.json({message: 'You are not the owner of the comment'});
                 }
             },(err) => next(err))
@@ -62,13 +58,11 @@ router.route('/')
                             next(err);
                         } else {
                             res.statusCode = 200
-                            res.setHeader('Content-Type', 'application/json');
                             res.json(comment);
                         }
                     })
                 } else {
                     res.statusCode = 403
-                    res.setHeader('Content-Type', 'application/json');
                     res.json({message: 'You are not the owner of the comment'});
                 }
             },(err) => next(err))
@@ -79,7 +73,6 @@ router.delete('/admin', authenticate.loggedIn, authenticate.isAdmin, (req, res, 
     Comments.findByIdAndRemove(req.body.commentId)
         .then((resp) => {
             res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
             res.json(resp);
         }, (err) => next(err))
         .catch((err) => next(err));

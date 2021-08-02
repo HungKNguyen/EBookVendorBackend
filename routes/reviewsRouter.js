@@ -16,7 +16,6 @@ router.route('/')
             .populate('user', ['firstname', 'lastname', 'image'])
             .then((reviews) => {
                 res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
                 res.json(reviews);
             }, (err) => next(err))
     })
@@ -24,7 +23,6 @@ router.route('/')
         Reviews.create({user: req.user._id, rating: req.body.rating, review: req.body.review})
             .then((review) => {
                 res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
                 res.json(review);
             }, (err) => next(err))
     })
@@ -43,14 +41,12 @@ router.route('/')
                             next(err);
                         } else {
                             res.statusCode = 200
-                            res.setHeader('Content-Type', 'application/json');
                             res.json(review);
                         }
                     })
                 } else {
                     res.statusCode = 403
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json({message: 'You are not the owner of the review'});
+                    res.end('You are not the owner of the review');
                 }
             },(err) => next(err))
     })
@@ -63,14 +59,12 @@ router.route('/')
                             next(err);
                         } else {
                             res.statusCode = 200
-                            res.setHeader('Content-Type', 'application/json');
                             res.json(review);
                         }
                     })
                 } else {
                     res.statusCode = 403
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json({message: 'You are not the owner of the review'});
+                    res.end('You are not the owner of the review');
                 }
             },(err) => next(err))
     })

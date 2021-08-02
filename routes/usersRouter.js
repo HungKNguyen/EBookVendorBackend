@@ -3,8 +3,8 @@ var router = express.Router();
 var Users = require('../models/users');
 var authenticate = require('../authenticate');
 
-/* GET all users - STABLE*/
-router.get('/', (req, res, next) => {
+/* GET all users - STABLE */
+router.get('/', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
     Users.find({})
         .then((users) => {
             res.statusCode = 200;

@@ -14,7 +14,6 @@ router.route('/')
         EBooks.find({})
             .then((ebooks) => {
                 res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
                 res.json(ebooks);
             }, (err) => next(err))
     })
@@ -28,7 +27,6 @@ router.route('/')
         })
             .then((ebook) => {
                 res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
                 res.json(ebook);
             }, (err) => next(err))
     })
@@ -55,7 +53,6 @@ router.route('/')
                         next(err);
                     } else {
                         res.statusCode = 200
-                        res.setHeader('Content-Type', 'application/json');
                         res.json(ebook);
                     }
                 })
@@ -65,7 +62,6 @@ router.route('/')
         EBooks.findByIdAndRemove(req.body.ebookId)
             .then((resp) => {
                 res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
                 res.json(resp);
             }, (err) => next(err))
     })

@@ -22,130 +22,161 @@ exports.suiteSetup = () => {
     })
 }
 
-//GET request for typical public info, expect 200 status code
-exports.getPublic200 = (agent) => it('Getting public resource', (done) => {
+//GET request for typical public info
+exports.getPublic = (agent, options) => it('Getting public resource', (done) => {
+    const defaultOptions = {
+        expectedStatus: 200,
+        expects: ((res) => {})
+    }
+
+    const setting = {...defaultOptions, ...options}
+
     agent.get('/api/public')
         .then((res) => {
-            expect(res.statusCode).to.equals(200);
+            expect(res.statusCode).to.equals(setting.expectedStatus);
+            setting.expects(res);
             done();
         })
         .catch((err) => done(err))
 });
 
-//GET request for typical user info, expect 200 status code
-exports.getUser200 = (agent) => it('Getting user resource', (done) => {
+//GET request for typical user info
+exports.getUser = (agent, options) => it('Getting user resource', (done) => {
+    const defaultOptions = {
+        expectedStatus: 200,
+        expects: ((res) => {})
+    }
+
+    const setting = {...defaultOptions, ...options}
+
     agent.get('/api/secret')
         .then((res) => {
-            expect(res.statusCode).to.equals(200);
+            expect(res.statusCode).to.equals(setting.expectedStatus);
+            setting.expects(res);
             done();
         })
         .catch((err) => done(err))
 });
 
-//GET request for typical public info, expect 401 status code due to lack of authorization
-exports.getUser401 = (agent) => it('Getting user resource', (done) => {
-    agent.get('/api/secret')
-        .then((res) => {
-            expect(res.statusCode).to.equals(401);
-            done();
-        })
-        .catch((err) => done(err))
-});
+//GET request for typical admin info
+exports.getAdmin = (agent, options) => it('Getting admin resource', (done) => {
+    const defaultOptions = {
+        expectedStatus: 200,
+        expects: ((res) => {})
+    }
 
-//GET request for typical admin info, expect 200 status code
-exports.getAdmin200 = (agent) => it('Getting admin resource', (done) => {
+    const setting = {...defaultOptions, ...options}
+
     agent.get('/api/supersecret')
         .then((res) => {
-            expect(res.statusCode).to.equals(200);
+            expect(res.statusCode).to.equals(setting.expectedStatus);
+            setting.expects(res);
             done();
         })
         .catch((err) => done(err))
 });
 
-//GET request for typical admin info, expect 401 status code due to lack of authorization
-exports.getAdmin401 = (agent) => it('Getting admin resource', (done) => {
-    agent.get('/api/supersecret')
-        .then((res) => {
-            expect(res.statusCode).to.equals(401);
-            done()
-        })
-        .catch((err) => done(err))
-});
+//POST request for sign up
+exports.postSignUp = (agent, options) => it('Sign up', (done) => {
+    const defaultOptions = {
+        expectedStatus: 200,
+        expects: ((res) => {}),
+        makeAdmin: false,
+        body: {
+            email: 'johndoe@gmail.com',
+            password: 'Password123'
+        }
+    }
 
-//GET request for typical admin info, expect 403 status code due to lack of permission
-exports.getAdmin403 = (agent) => it('Getting admin resource', (done) => {
-    agent.get('/api/supersecret')
-        .then((res) => {
-            expect(res.statusCode).to.equals(403);
-            done();
-        })
-        .catch((err) => done(err))
-});
+    const setting = {...defaultOptions, ...options}
 
-//POST request for sign up, expect 200 status code
-exports.postSignUpUser200 = (agent) => it('Sign up', (done) => {
     agent.post('/api/signup')
-        .send({
-            email: "johndoe@gmail.com",
-            password: "Password123"
-        })
+        .send(setting.body)
         .then((res) => {
-            expect(res.statusCode).to.equals(200)
-            expect(res.headers).to.include.keys("set-cookie")
-            done();
+            expect(res.statusCode).to.equals(setting.expectedStatus)
+            setting.expects(res)
+            if (setting.makeAdmin) {
+                mongoose.connection.db.collection('users').updateOne(
+                    { email: setting.body.email},
+                    { $set: {admin: true}}
+                )
+                    .then((result) => {
+                        expect(result).to.include({
+                            matchedCount: 1,
+                            modifiedCount: 1
+                        })
+                        done();
+                    })
+            } else {
+                done();
+            }
         })
         .catch((err) => done(err))
 });
 
-//POST request for sign up and modification into an admin account, expect 200 status code
-exports.postSignUpAdmin200 = (agent) => it('Sign Up and set as admin', (done) => {
-    agent.post('/api/signup')
-        .send({
-            email: "johndoe@gmail.com",
-            password: "Password123"
-        })
-        .then((res) => {
-            expect(res.statusCode).to.equals(200)
-            expect(res.headers).to.include.keys("set-cookie")
-            return mongoose.connection.db.collection('users')
-        })
-        .then((collection) => {
-            return collection.updateOne(
-                { email: "johndoe@gmail.com"},
-                { $set: {admin: true}}
-            )
-        })
-        .then((result) => {
-            expect(result).to.include({
-                matchedCount: 1,
-                modifiedCount: 1
-            })
-            done();
-        })
-        .catch((err) => done(err))
-});
+//POST for log in account
+exports.postLogIn = (agent, options) => it('Log in User', (done) => {
+    const defaultOptions = {
+        expectedStatus: 200,
+        expects: ((res) => {}),
+        body: {
+            email: 'johndoe@gmail.com',
+            password: 'Password123'
+        }
+    }
 
-//POST for log in, expect 200 status code
-exports.postLogIn200 = (agent) => it('Log in', (done) => {
+    const setting = {...defaultOptions, ...options}
+
     agent.post('/api/login')
-        .send({
-            email: "johndoe@gmail.com",
-            password: "Password123"
-        })
+        .send(setting.body)
         .then((res) => {
-            expect(res.statusCode).to.equals(200);
-            expect(res.headers).to.include.keys("set-cookie")
+            expect(res.statusCode).to.equals(setting.expectedStatus);
+            setting.expects(res);
             done();
         })
         .catch((err) => done(err))
 });
 
-//GET for log out, expect 200 status code
-exports.getLogout200 = (agent) => it('Log out', (done) => {
+//GET for log out
+exports.getLogout = (agent, options) => it('Log out', (done) => {
+    const defaultOptions = {
+        expectedStatus: 200,
+        expects: ((res) => {})
+    }
+
+    const setting = {...defaultOptions, ...options}
+
     agent.get('/api/logout')
         .then((res) => {
-            expect(res.statusCode).to.equals(200);
+            expect(res.statusCode).to.equals(setting.expectedStatus);
+            setting.expects(res)
             done();
         })
         .catch((err) => done(err))
 });
+
+//POST a typical ebook
+exports.postEbook = (agent, options) => it('Post an ebook to the server', (done) => {
+    const defaultOptions = {
+        expectedStatus: 200,
+        expects: ((res) => {}),
+        body: {
+            name: 'Name',
+            author: 'Author',
+            price: 69,
+            description: 'Description',
+            ISBN: '1234567890'
+        }
+    }
+
+    const setting = {...defaultOptions, ...options}
+
+    agent.post('/api/ebooks')
+        .send(setting.body)
+        .then((res) => {
+            expect(res.statusCode).to.equals(setting.expectedStatus);
+            setting.expects(res);
+            done();
+        })
+        .catch((err) => done(err))
+})

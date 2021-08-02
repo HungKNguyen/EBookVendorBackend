@@ -7,67 +7,87 @@ const testHelper = require('../testHelper')
 describe('indexRouter testing: No authorization', () => {
     testHelper.suiteSetup();
     const agent = request.agent(app);
-    testHelper.getPublic200(agent);
-    testHelper.getUser401(agent);
-    testHelper.getAdmin401(agent);
+    testHelper.getPublic(agent);
+    testHelper.getUser(agent, {expectedStatus: 401});
+    testHelper.getAdmin(agent, {expectedStatus: 401});
 })
 
 describe('indexRouter testing: User authorization', () => {
     testHelper.suiteSetup();
     const agent = request.agent(app);
-    testHelper.postSignUpUser200(agent);
-    testHelper.getPublic200(agent);
-    testHelper.getUser200(agent);
-    testHelper.getAdmin403(agent);
-    testHelper.getLogout200(agent);
-    testHelper.getUser401(agent);
-    testHelper.postLogIn200(agent);
-    testHelper.getUser200(agent);
-    testHelper.getLogout200(agent);
+    testHelper.postSignUp(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie")
+        }});
+    testHelper.getPublic(agent);
+    testHelper.getUser(agent);
+    testHelper.getAdmin(agent, {expectedStatus: 403});
+    testHelper.getLogout(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
+    testHelper.getUser(agent, {expectedStatus: 401});
+    testHelper.postLogIn(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
+    testHelper.getUser(agent);
+    testHelper.getLogout(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
 })
 
 describe('indexRouter testing: Admin authorization', () => {
     testHelper.suiteSetup();
     const agent = request.agent(app);
-    testHelper.postSignUpAdmin200(agent);
-    testHelper.getPublic200(agent);
-    testHelper.getUser200(agent);
-    testHelper.getAdmin200(agent);
-    testHelper.getLogout200(agent);
-    testHelper.getAdmin401(agent);
-    testHelper.postLogIn200(agent);
-    testHelper.getAdmin200(agent);
-    testHelper.getLogout200(agent);
+    testHelper.postSignUp(agent, {
+        makeAdmin: true,
+        expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }
+    });
+    testHelper.getPublic(agent);
+    testHelper.getUser(agent);
+    testHelper.getAdmin(agent);
+    testHelper.getLogout(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
+    testHelper.getAdmin(agent, {expectedStatus: 401});
+    testHelper.postLogIn(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
+    testHelper.getAdmin(agent);
+    testHelper.getLogout(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
 })
 
-describe('Failed Sign Up and Log in', () => {
+describe('indexRouter testing: Failed Sign Up and Log in', () => {
     testHelper.suiteSetup();
     const agent = request.agent(app);
-    testHelper.postSignUpUser200(agent);
-    testHelper.getLogout200(agent);
-    it('Failed Log In', (done) => {
-        agent.post('/api/login')
-            .send({
-                email: "johndoe@gmail.com",
-                password: "WrongPassword"
-            })
-            .then((res) => {
-                expect(res.statusCode).to.equals(401)
-                expect(res.headers).to.not.include.keys("set-cookie")
-                done();
-            })
-            .catch((err) => done(err))
-    });
-    it('Failed Sign up due to same email', (done) => {
-        agent.post('/api/signup')
-            .send({
-                email: "johndoe@gmail.com",
-                password: "AnotherPassword"
-            })
-            .then((res) => {
-                expect(res.statusCode).to.equals(500)
-                done();
-            })
-            .catch((err) => done(err))
-    });
+    testHelper.postSignUp(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
+    testHelper.getLogout(agent, {expects: (res) => {
+            expect(res.headers).to.include.keys("set-cookie");
+        }});
+    //Intentional Wrong Login
+    testHelper.postLogIn(agent, {
+        expectedStatus: 401,
+        expects: (res) => {
+            expect(res.headers).to.not.include.keys("set-cookie");
+        },
+        body: {
+            email: "johndoe@gmail.com",
+            password: "WrongPassword"
+        }
+    })
+    //Intentional Duplicate Sign Up
+    testHelper.postSignUp(agent, {
+        expectedStatus: 500,
+        expects: (res) => {
+            expect(res.headers).to.not.include.keys("set-cookie");
+        },
+        body: {
+            email: "johndoe@gmail.com",
+            password: "AnotherPassword"
+        }
+    })
 })
