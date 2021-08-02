@@ -34,7 +34,7 @@ router.route('/')
     })
     .put(authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
         EBooks.findById(req.body.ebookId)
-            .then((ebooks) => {
+            .then((ebook) => {
                 if (req.body.name) {
                     ebook.name = req.body.name
                 }
@@ -76,10 +76,10 @@ router.route('/favorite')
             {$sort: {liked: -1}},
             {$limit: 3}
         ])
-        .then((ebook) => {
+        .then((ebooks) => {
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
-            res.json(ebook);
+            res.json(ebooks);
         }, (err) => next(err))
     })
 
