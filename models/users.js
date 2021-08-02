@@ -27,7 +27,7 @@ const User = new Schema({
     },
     favEBooks: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'EBook'
+        ref: 'EBook',
     }],
     ownedEBooks: [{
         type: mongoose.Schema.Types.ObjectId,

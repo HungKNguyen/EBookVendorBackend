@@ -9,12 +9,13 @@ PUSH to modify an ebook - STABLE
 POST to create a new ebook - STABLE
 DELETE to delete an ebook - STABLE
  */
-router.route('/')
+router.route('/ebook')
     .get((req, res, next) => {
         EBooks.find({})
             .then((ebooks) => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
+                console.log("this is " + ebooks);
                 res.json(ebooks);
             }, (err) => next(err))
     })
@@ -70,13 +71,17 @@ router.route('/')
             }, (err) => next(err))
     })
 
-router.route('/favourite')
+router.route('/favorite')
     .get((req, res, next) => {
-        Ebooks.aggregate([
+        EBooks.aggregate([
             {$sort: {liked: -1}},
-            {$limit: 3},
-            {match: {liked: {$gt: 1}}}
+            {$limit: 3}
         ])
+        .then((ebook) => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(ebook);
+        }, (err) => next(err))
     })
 
 module.exports = router;
