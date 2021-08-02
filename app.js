@@ -3,7 +3,6 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var bodyParser = require("body-parser")
 var logger = require('morgan');
-var config = require('./config');
 // var session = require('express-session');
 var passport = require('passport');
 
@@ -16,19 +15,6 @@ var reviewsRouter = require('./routes/reviewsRouter');
 var ebooksRouter = require('./routes/ebooksRouter');
 var uploadRouter = require('./routes/uploadRouter');
 
-const mongoose = require('mongoose');
-
-const url = config.mongoUrl;
-const connect = mongoose.connect(url, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
-  useFindAndModify: false
-});
-
-connect.then((db) => {
-  console.log('Connected correctly to the server');
-}, (err) => {console.log(err)})
 
 var app = express();
 

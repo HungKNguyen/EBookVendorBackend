@@ -3,21 +3,21 @@ var router = express.Router();
 var authenticate = require('../authenticate');
 var User = require('../models/users');
 
-/* GET request for normal authorization - STABLE*/
+router.get('/public', (req, res, next) => {
+    res.statusCode = 200;
+    res.json({success: true, status: 'Public resources'});
+})
+
 router.get('/secret', authenticate.loggedIn, function(req, res){
     res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
     res.json({success: true, status: 'Hidden to non-user'});
 });
 
-/* GET request for admin authorization - STABLE*/
 router.get('/supersecret', authenticate.loggedIn, authenticate.isAdmin, function(req, res){
     res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
     res.json({success: true, status: 'Only for an admin'});
 });
 
-/* POST request to login - STABLE*/
 router.post('/login', authenticate.logInLocal,
     function(req, res) {
         let token = authenticate.getToken({_id: req.user._id});
@@ -28,16 +28,14 @@ router.post('/login', authenticate.logInLocal,
     }
 );
 
-/* GET request to logout - STABLE*/
 router.get('/logout', function(req, res){
     req.logout();
     res.statusCode = 200;
-    res.cookie('jwt', "", {httpOnly: true, maxAge: 1})
+    res.clearCookie('jwt', {path: '/'})
     res.setHeader('Content-Type', 'application/json');
     res.json({success: true, status: 'You are successfully logged out!'});
 });
 
-/* POST request to signup - STABLE*/
 router.post('/signup',function(req,res,next) {
     User.register(new User({email: req.body.email}), req.body.password, (err, user) => {
         if(err) {

@@ -7,6 +7,22 @@
 var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('http');
+var mongoose = require('mongoose')
+var config = require('../config')
+
+/**
+ * Connect to mongoDB
+ */
+
+mongoose.connect(config.mongoUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+})
+    .then(() => {
+      console.log('Connected correctly to the server.')
+    }, (err) => {console.error(err)})
 
 /**
  * Get port from environment and store in Express.
