@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
+    "mockFail": "echo \"Error: I SHOULD FAIL LOLOLOLOLOL \" && exit 1",
     "test": "mocha --recursive --exit --timeout 10000"
   },
   "pre-commit": [
+    "mockFail",
     "test"
   ],
   "dependencies": {
