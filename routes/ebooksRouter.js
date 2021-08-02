@@ -9,7 +9,7 @@ PUSH to modify an ebook - STABLE
 POST to create a new ebook - STABLE
 DELETE to delete an ebook - STABLE
  */
-router.route('/ebook')
+router.route('/')
     .get((req, res, next) => {
         EBooks.find({})
             .then((ebooks) => {
@@ -34,7 +34,7 @@ router.route('/ebook')
     })
     .put(authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
         EBooks.findById(req.body.ebookId)
-            .then((ebook) => {
+            .then((ebooks) => {
                 if (req.body.name) {
                     ebook.name = req.body.name
                 }
