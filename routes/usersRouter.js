@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var Users = require('../models/users');
+var EBooks = require('../models/ebooks');
 var authenticate = require('../authenticate');
 
 /* GET all users - STABLE */
@@ -85,7 +86,8 @@ router.route('/favorite')
             .then((user) => {
                 if (user.favEBooks.indexOf(req.body.ebookId) === -1) {
                     user.favEBooks.push(req.body.ebookId);
-                }
+                    EBooks.updateMany( {$inc: {liked: 1}} )
+                } 
                 user.save((err, user) => {
                     if(err) {
                         next(err)
@@ -100,7 +102,10 @@ router.route('/favorite')
     .delete(authenticate.loggedIn, (req, res, next) => {
         Users.findById(req.user._id)
             .then((user) => {
-                user.favEBooks.pull(req.body.ebookId)
+                if (user.favEBooks.indexOf(req.body.ebookId) === 1) {
+                    user.favEBooks.pull(req.body.ebookId);
+                    EBooks.updateMany( {$inc: {liked: -1}} )
+                } 
                 user.save((err, user) => {
                     if(err) {
                         next(err)

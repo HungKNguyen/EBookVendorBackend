@@ -66,4 +66,17 @@ router.route('/')
             }, (err) => next(err))
     })
 
+router.route('/favorite')
+    .get((req, res, next) => {
+        EBooks.aggregate([
+            {$sort: {liked: -1}},
+            {$limit: 3}
+        ])
+        .then((ebooks) => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(ebooks);
+        }, (err) => next(err))
+    })
+
 module.exports = router;
