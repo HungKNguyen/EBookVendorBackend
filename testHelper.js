@@ -1,22 +1,10 @@
 const mongoose = require('mongoose')
-const config = require('./config')
 const expect = require('chai').expect
 
-// Basic set up, start test suite by connect and end by disconnect
+// Basic set up, drop database after each suite
 exports.suiteSetup = () => {
-  before((done) => {
-    mongoose.connect(config.mongoTestUrl, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
-      useFindAndModify: false
-    })
-      .then(() => done())
-      .catch((err) => done(err))
-  })
   after((done) => {
     mongoose.connection.db.dropDatabase()
-      .then(mongoose.disconnect)
       .then(() => done())
       .catch((err) => done(err))
   })
