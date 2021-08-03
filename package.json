@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "eslint '**/*.js' --fix && mocha --recursive --exit --timeout 10000"
+    "test": "mocha --recursive --exit --timeout 10000",
+    "lint": "eslint '**/*.js'",
+    "lint-fix": "eslint '**/*.js' --fix",
+    "pre-commit": "npm run test && npm run lint-fix"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
