@@ -93,7 +93,7 @@ Review:
     date: String
 }
 ```
-### Backend Routes (https://localhost:3000/backend)
+### Backend Routes (https://localhost:3001/api)
 
 `\users`: GET request: Return information of all users - admin only
 
