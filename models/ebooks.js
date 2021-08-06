@@ -11,7 +11,8 @@ const ebookSchema = new Schema({
     required: true
   },
   image: {
-    type: String
+    type: String,
+    default: ''
   },
   price: {
     type: Number,
