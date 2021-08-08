@@ -12,10 +12,6 @@ const orderSchema = new Schema({
     ref: 'EBook',
     required: true
   }],
-  payment: {
-    type: String,
-    required: true
-  },
   amount: {
     type: Number,
     required: true

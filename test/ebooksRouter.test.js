@@ -91,6 +91,15 @@ describe('ebooksRouter content test', (done) => {
       })
       .catch((err) => done(err))
   })
+  it('Test getting specific ebook', (done) => {
+    agent.get(`/api/ebooks/single/${ebookId}`)
+      .then((res) => {
+        expect(res.statusCode).to.equals(200)
+        expect(res.body).to.include(ebook)
+        done()
+      })
+      .catch((err) => done(err))
+  })
   it('Changing the existing ebook', (done) => {
     agent.put('/api/ebooks')
       .send({
