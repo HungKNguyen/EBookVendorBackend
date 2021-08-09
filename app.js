@@ -39,10 +39,18 @@ app.use('/api/reviews', reviewsRouter)
 app.use('/api/ebooks', ebooksRouter)
 app.use('/api/upload', uploadRouter)
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  res.statusCode = 404
-  res.end('This is an error')
+// catch 404
+app.use(function (error, req, res, next) {
+  if (error) {
+    next(error)
+  } else {
+    res.statusCode = 404
+    res.end('Not found')
+  }
 })
 
+// catch 500
+app.use(function (error, req, res, next) {
+  res.status(500).send(error)
+})
 module.exports = app

@@ -1,7 +1,8 @@
 const expect = require('chai').expect
 const request = require('supertest')
 const app = require('../app')
-const testHelper = require('../testHelper')
+const testHelper = require('./testHelper')
+const mongoose = require('mongoose')
 
 describe('ebooksRouter authorization test', (done) => {
   testHelper.suiteSetup()
@@ -46,7 +47,34 @@ describe('ebooksRouter content test', (done) => {
   }
   const agent = request.agent(app)
   testHelper.postSignUp(agent, { makeAdmin: true })
+  it('Testing favorite function', (done) => {
+    const array = [
+      { title: 'A', liked: 2 },
+      { title: 'B', liked: 1 },
+      { title: 'C', liked: 6 },
+      { title: 'D', liked: 4 },
+      { title: 'E', liked: 7 }
+    ]
+    mongoose.connection.db.collection('ebooks').insertMany(array)
+      .then(() => {
+        return agent.get('/api/ebooks/favorite')
+      })
+      .then((res) => {
+        expect(res.statusCode).to.equals(200)
+        expect(res.body).to.be.an('array')
+        expect(res.body.length).to.equal(3)
+        expect(res.body[0]).to.have.property('title', 'E')
+        expect(res.body[1]).to.have.property('title', 'C')
+        expect(res.body[2]).to.have.property('title', 'D')
+        done()
+      })
+      .then(() => {
+        mongoose.connection.db.dropCollection('ebooks')
+      })
+      .catch((err) => done(err))
+  })
   testHelper.postEbook(agent, {
+    body: ebook,
     expects: (res) => {
       expect(res.body).to.include(ebook)
       ebookId = res.body._id
@@ -59,6 +87,15 @@ describe('ebooksRouter content test', (done) => {
         expect(res.body).to.be.an('array')
         expect(res.body.length).to.equal(1)
         expect(res.body.filter((ebook) => ebook._id === ebookId)[0]).to.include(ebook)
+        done()
+      })
+      .catch((err) => done(err))
+  })
+  it('Test getting specific ebook', (done) => {
+    agent.get(`/api/ebooks/single/${ebookId}`)
+      .then((res) => {
+        expect(res.statusCode).to.equals(200)
+        expect(res.body).to.include(ebook)
         done()
       })
       .catch((err) => done(err))

@@ -4,13 +4,16 @@ const passportLocalMongoose = require('passport-local-mongoose')
 
 const User = new Schema({
   firstname: {
-    type: String
+    type: String,
+    default: ''
   },
   lastname: {
-    type: String
+    type: String,
+    default: ''
   },
   image: {
-    type: String
+    type: String,
+    default: ''
   },
   FbOAuth: {
     type: String

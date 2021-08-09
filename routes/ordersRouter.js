@@ -8,7 +8,7 @@ const mongoose = require('mongoose')
 
 /*
 GET to get user's orders - STABLE
-POST to create a new order - OKAY
+POST to create a new order - STABLE
 */
 router.route('/')
   .get(authenticate.loggedIn, (req, res, next) => {
@@ -16,7 +16,6 @@ router.route('/')
       .populate('ebooks', ['name', 'author', 'image', 'price'])
       .then((orders) => {
         res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
         res.json(orders)
       }, (err) => next(err))
   })
@@ -30,19 +29,18 @@ router.route('/')
     ])
       .then((respond) => {
         const today = new Date()
-        Orders.create({
+        return Orders.create({
           user: req.user._id,
           ebooks: req.body.ebookIds,
-          payment: req.body.payment,
           amount: respond[0].amount,
           month: today.getMonth() + 1,
           year: today.getFullYear()
         })
-          .then((order) => {
-            res.locals.order = order
-            next()
-          }, (err) => next(err))
       })
+      .then((order) => {
+        res.locals.order = order
+        next()
+      }, (err) => next(err))
   }, (req, res, next) => {
     /* UPDATE the book sold amount - STABLE */
     Ebooks.updateMany({ _id: { $in: req.body.ebookIds } }, { $inc: { sold: 1 } })
@@ -57,7 +55,6 @@ router.route('/')
             next(err)
           } else {
             res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
             res.json(res.locals.order)
           }
         })
@@ -72,7 +69,6 @@ router.get('/admin', authenticate.loggedIn, authenticate.isAdmin, (req, res, nex
     .populate('ebooks', 'name')
     .then((orders) => {
       res.statusCode = 200
-      res.setHeader('Content-Type', 'application/json')
       res.json(orders)
     }, (err) => next(err))
 })
@@ -86,7 +82,7 @@ router.get('/report', authenticate.loggedIn, authenticate.isAdmin,
       { $group: { _id: null, revenue: { $sum: '$amount' }, totalCount: { $sum: { $size: '$ebooks' } } } }
     ])
       .then((report) => {
-        res.locals.revenue = report[0].revenue
+        res.locals.revenue = Math.round((report[0].revenue + Number.EPSILON) * 100) / 100
         res.locals.totalCount = report[0].totalCount
         next()
       }, (err) => next(err))
@@ -111,7 +107,6 @@ router.get('/report', authenticate.loggedIn, authenticate.isAdmin,
         res.locals.year = req.body.year
         res.locals.ebooksCount = report
         res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
         res.json(res.locals)
       }, (err) => next(err))
   }

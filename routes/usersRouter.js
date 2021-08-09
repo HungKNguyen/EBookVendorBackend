@@ -9,7 +9,6 @@ router.get('/', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) =>
   Users.find({})
     .then((users) => {
       res.statusCode = 200
-      res.setHeader('Content-Type', 'application/json')
       res.json(users)
     }, (err) => next(err))
 })
@@ -21,7 +20,6 @@ router.route('/profile')
     Users.findById(req.user._id)
       .then((user) => {
         res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
         res.json(user)
       }, (err) => next(err))
   })
@@ -30,8 +28,8 @@ router.route('/profile')
     Users.findByIdAndRemove(req.user._id)
       .then((resp) => {
         req.logout()
+        res.clearCookie('jwt', { path: '/' })
         res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
         res.json(resp)
       }, (err) => next(err))
       .catch((err) => next(err))
@@ -54,7 +52,6 @@ router.route('/profile')
             next(err)
           } else {
             res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
             res.json(user)
           }
         })
@@ -69,6 +66,8 @@ router.put('/password', authenticate.loggedIn, (req, res, next) => {
         if (err) {
           next(err)
         } else {
+          req.logout()
+          res.clearCookie('jwt', { path: '/' })
           res.statusCode = 200
           res.json({ success: true, message: 'Your password has been changed successfully' })
         }
@@ -77,23 +76,31 @@ router.put('/password', authenticate.loggedIn, (req, res, next) => {
 })
 
 /*
+GET to get list of favorite ebooks - STABLE
 POST to add favorite ebook - STABLE
 DELETE to delete a favorite ebook - STABLE
 */
 router.route('/favorite')
+  .get(authenticate.loggedIn, (req, res, next) => {
+    Users.findById(req.user._id)
+      .populate('favEBooks')
+      .then((user) => {
+        res.statusCode = 200
+        res.json(user.favEBooks)
+      }, (err) => next(err))
+  })
   .post(authenticate.loggedIn, (req, res, next) => {
     Users.findById(req.user._id)
-      .then((user) => {
+      .then(async (user) => {
         if (user.favEBooks.indexOf(req.body.ebookId) === -1) {
           user.favEBooks.push(req.body.ebookId)
-          EBooks.updateMany({ $inc: { liked: 1 } })
+          await EBooks.findByIdAndUpdate(req.body.ebookId, { $inc: { liked: 1 } })
         }
         user.save((err, user) => {
           if (err) {
             next(err)
           } else {
             res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
             res.json(user)
           }
         })
@@ -101,17 +108,16 @@ router.route('/favorite')
   })
   .delete(authenticate.loggedIn, (req, res, next) => {
     Users.findById(req.user._id)
-      .then((user) => {
-        if (user.favEBooks.indexOf(req.body.ebookId) === 1) {
+      .then(async (user) => {
+        if (user.favEBooks.indexOf(req.body.ebookId) !== -1) {
           user.favEBooks.pull(req.body.ebookId)
-          EBooks.updateMany({ $inc: { liked: -1 } })
+          await EBooks.findByIdAndUpdate(req.body.ebookId, { $inc: { liked: -1 } })
         }
         user.save((err, user) => {
           if (err) {
             next(err)
           } else {
             res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
             res.json(user)
           }
         })

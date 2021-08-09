@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node bin/www",
-    "test": "mocha --recursive --exit --timeout 10000 --require 'test/hooks.js'",
+    "test": "mocha --recursive --exit --require 'test/hooks.js'",
     "lint": "eslint '**/*.js'",
     "lint-fix": "eslint '**/*.js' --fix",
     "pre-commit-test": "npm run test"

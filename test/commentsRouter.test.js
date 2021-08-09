@@ -1,7 +1,7 @@
 const expect = require('chai').expect
 const request = require('supertest')
 const app = require('../app')
-const testHelper = require('../testHelper')
+const testHelper = require('./testHelper')
 
 describe('commentsRouter authorization test', () => {
   testHelper.suiteSetup()
