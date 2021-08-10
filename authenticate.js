@@ -3,6 +3,7 @@ const User = require('./models/users')
 
 const JwtStrategy = require('passport-jwt').Strategy
 const FacebookStrategy = require('passport-facebook').Strategy
+const GoogleStrategy = require('passport-google-oauth2').Strategy
 const jwt = require('jsonwebtoken')
 
 // Local strategy
@@ -19,8 +20,7 @@ passport.use(new FacebookStrategy({
   profileFields: ['id', 'name', 'emails']
 },
 function (accessToken, refreshToken, profile, cb) {
-  console.log(profile)
-  User.findOne({ FbOAuth: profile._json.id }, (err, user) => {
+  User.findOne({ FbOAuth: profile.id }, (err, user) => {
     if (err) {
       return cb(err, false)
     }
@@ -28,10 +28,10 @@ function (accessToken, refreshToken, profile, cb) {
       return cb(null, user)
     } else {
       User.create({
-        FbOAuth: profile._json.id,
-        email: profile._json.email,
-        firstname: profile._json.first_name,
-        lastname: profile._json.last_name
+        FbOAuth: profile.id,
+        email: profile.emails[0].value,
+        firstname: profile.name.givenName,
+        lastname: profile.name.familyName
       }, (err, user) => {
         return cb(err, user)
       })
@@ -39,7 +39,38 @@ function (accessToken, refreshToken, profile, cb) {
   })
 }
 ))
+
 exports.logInFB = passport.authenticate('facebook', { scope: ['email'] })
+
+// Google strategy
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOG_CLIENT_ID,
+  clientSecret: process.env.GOOG_CLIENT_SECRET,
+  callbackURL: '/api/login/google/callback'
+},
+function (accessToken, refreshToken, profile, cb) {
+  User.findOne({ GoogleOAuth: profile.id }, (err, user) => {
+    if (err) {
+      return cb(err, false)
+    }
+    if (!err && user !== null) {
+      return cb(null, user)
+    } else {
+      User.create({
+        GoogleOAuth: profile.id,
+        email: profile.emails[0].value,
+        firstname: profile.name.givenName,
+        lastname: profile.name.familyName
+      }, (err, user) => {
+        return cb(err, user)
+      })
+    }
+  })
+}
+))
+
+exports.logInGOOG = passport.authenticate('google', { scope: ['profile', 'email'] })
 
 // JWT strategy, give user token once they pass one of the above strategies
 

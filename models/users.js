@@ -26,9 +26,6 @@ const User = new Schema({
   GoogleOAuth: {
     type: String
   },
-  AppleOAuth: {
-    type: String
-  },
   admin: {
     type: Boolean,
     default: false
