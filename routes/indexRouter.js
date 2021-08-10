@@ -27,6 +27,15 @@ router.post('/login', authenticate.logInLocal,
   }
 )
 
+router.get('/login/facebook', authenticate.logInFB)
+
+router.get('/login/facebook/callback', authenticate.logInFB, (req, res) => {
+  const token = authenticate.getToken({ _id: req.user._id })
+  res.statusCode = 200
+  res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 3600 * 1000 })
+  res.json({ success: true, status: 'You are successfully logged in!' })
+})
+
 router.get('/logout', function (req, res) {
   req.logout()
   res.statusCode = 200
