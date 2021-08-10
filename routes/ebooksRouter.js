@@ -23,7 +23,8 @@ router.route('/')
       author: req.body.author,
       price: req.body.price,
       description: req.body.description,
-      ISBN: req.body.ISBN
+      ISBN: req.body.ISBN,
+      featured: req.body.featured
     })
       .then((ebook) => {
         res.statusCode = 200
@@ -47,6 +48,9 @@ router.route('/')
         }
         if (req.body.ISBN) {
           ebook.ISBN = req.body.ISBN
+        }
+        if (req.body.featured) {
+          ebook.featured = req.body.featured
         }
         ebook.save((err, ebook) => {
           if (err) {
