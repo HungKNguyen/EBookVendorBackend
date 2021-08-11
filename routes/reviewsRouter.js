@@ -68,4 +68,7 @@ router.route('/')
       }, (err) => next(err))
   })
 
+// Admin choose featured review
+router.put('/admin')
+
 module.exports = router

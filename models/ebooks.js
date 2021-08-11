@@ -33,6 +33,10 @@ const ebookSchema = new Schema({
   liked: {
     type: Number,
     default: 0
+  },
+  featured: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
