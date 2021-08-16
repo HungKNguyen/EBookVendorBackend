@@ -2,7 +2,6 @@ const express = require('express')
 const router = express.Router()
 const fs = require('fs')
 const path = require('path')
-const bodyParser = require('body-parser')
 const authenticate = require('../authenticate')
 const EBooks = require('../models/ebooks')
 const Users = require('../models/users')
@@ -25,8 +24,6 @@ const imageFileFilter = (req, file, cb) => {
 
 const upload = multer({ storage: storage, fileFilter: imageFileFilter })
 
-router.use(bodyParser.json())
-
 /* POST to upload/overwrite an image to an ebook - STABLE */
 /* DELETE to remove an image to an ebook */
 router.route('/imgEbook')
@@ -34,36 +31,40 @@ router.route('/imgEbook')
     EBooks.findById(req.body.ebookId)
       .then((ebook) => {
         if (ebook.image !== '') {
-          fs.unlinkSync(ebook.image)
+          if (fs.existsSync(ebook.image)) {
+            fs.unlinkSync(ebook.image)
+          }
         }
         ebook.image = req.file.path
-        ebook.save((err, ebook) => {
+        ebook.save((err) => {
           if (err) {
             next(err)
           } else {
             res.statusCode = 200
-            res.json(ebook)
+            res.json({ message: 'You have successfully uploaded the ebook image' })
           }
         })
       })
   })
-  .delete(authenticate.loggedIn, upload.none(), authenticate.isAdmin, (req, res, next) => {
+  .delete(authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
     EBooks.findById(req.body.ebookId)
       .then((ebook) => {
         if (ebook.image !== '') {
-          fs.unlinkSync(ebook.image)
+          if (fs.existsSync(ebook.image)) {
+            fs.unlinkSync(ebook.image)
+          }
           ebook.image = ''
-          ebook.save((err, ebook) => {
+          ebook.save((err) => {
             if (err) {
               next(err)
             } else {
               res.statusCode = 200
-              res.json(ebook)
+              res.json({ message: 'You have successfully removed the ebook image' })
             }
           })
         } else {
           res.statusCode = 200
-          res.json(ebook)
+          res.json({ message: 'The ebook doesn\'t currently have an image' })
         }
       })
   })
@@ -75,15 +76,17 @@ router.route('/imgUser')
     Users.findById(req.user._id)
       .then((user) => {
         if (user.image !== '') {
-          fs.unlinkSync(user.image)
+          if (fs.existsSync(user.image)) {
+            fs.unlinkSync(user.image)
+          }
         }
         user.image = req.file.path
-        user.save((err, user) => {
+        user.save((err) => {
           if (err) {
             next(err)
           } else {
             res.statusCode = 200
-            res.json(user)
+            res.json({ message: 'You have successfully uploaded the profile image' })
           }
         })
       })
@@ -92,19 +95,21 @@ router.route('/imgUser')
     Users.findById(req.user._id)
       .then((user) => {
         if (user.image !== '') {
-          fs.unlinkSync(user.image)
+          if (fs.existsSync(user.image)) {
+            fs.unlinkSync(user.image)
+          }
           user.image = ''
-          user.save((err, user) => {
+          user.save((err) => {
             if (err) {
               next(err)
             } else {
               res.statusCode = 200
-              res.json(user)
+              res.json({ message: 'You have successfully removed the profile image' })
             }
           })
         } else {
           res.statusCode = 200
-          res.json(user)
+          res.json({ message: 'Your profile doesn\'t currently have an image' })
         }
       })
   })

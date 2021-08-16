@@ -26,11 +26,11 @@ router.route('/profile')
 /* DELETE user account - STABLE */
   .delete(authenticate.loggedIn, (req, res, next) => {
     Users.findByIdAndRemove(req.user._id)
-      .then((resp) => {
+      .then(() => {
         req.logout()
         res.clearCookie('jwt', { path: '/' })
         res.statusCode = 200
-        res.json(resp)
+        res.json({ message: 'You have successfully deleted your account' })
       }, (err) => next(err))
       .catch((err) => next(err))
   })
@@ -47,12 +47,12 @@ router.route('/profile')
         if (req.body.email) {
           user.email = req.body.email
         }
-        user.save((err, user) => {
+        user.save((err) => {
           if (err) {
             next(err)
           } else {
             res.statusCode = 200
-            res.json(user)
+            res.json({ message: 'You have successfully modified your account' })
           }
         })
       }, (err) => next(err))
@@ -96,12 +96,12 @@ router.route('/favorite')
           user.favEBooks.push(req.body.ebookId)
           await EBooks.findByIdAndUpdate(req.body.ebookId, { $inc: { liked: 1 } })
         }
-        user.save((err, user) => {
+        user.save((err) => {
           if (err) {
             next(err)
           } else {
             res.statusCode = 200
-            res.json(user)
+            res.json({ message: 'You have successfully added the ebook from your favorite list' })
           }
         })
       }, (err) => next(err))
@@ -113,15 +113,65 @@ router.route('/favorite')
           user.favEBooks.pull(req.body.ebookId)
           await EBooks.findByIdAndUpdate(req.body.ebookId, { $inc: { liked: -1 } })
         }
-        user.save((err, user) => {
+        user.save((err) => {
           if (err) {
             next(err)
           } else {
             res.statusCode = 200
-            res.json(user)
+            res.json({ message: 'You have successfully removed the ebook from your favorite list' })
           }
         })
       }, (err) => next(err))
   })
 
+router.route('/cart')
+  .get(authenticate.loggedIn, (req, res, next) => {
+    Users.findById(req.user._id)
+      .populate('cart')
+      .then((user) => {
+        res.statusCode = 200
+        res.json(user.cart)
+      }, (err) => next(err))
+  })
+  .post(authenticate.loggedIn, (req, res, next) => {
+    Users.findById(req.user._id)
+      .then((user) => {
+        if (user.cart.indexOf(req.body.ebookId) === -1) {
+          user.cart.push(req.body.ebookId)
+        }
+        user.save((err) => {
+          if (err) {
+            next(err)
+          } else {
+            res.statusCode = 200
+            res.json({ message: 'You have successfully added the ebook from your favorite list' })
+          }
+        })
+      }, (err) => next(err))
+  })
+  .delete(authenticate.loggedIn, (req, res, next) => {
+    Users.findById(req.user._id)
+      .then((user) => {
+        if (user.cart.indexOf(req.body.ebookId) !== -1) {
+          user.cart.pull(req.body.ebookId)
+        }
+        user.save((err, user) => {
+          if (err) {
+            next(err)
+          } else {
+            res.statusCode = 200
+            res.json({ message: 'You have successfully removed the ebook from your favorite list' })
+          }
+        })
+      }, (err) => next(err))
+  })
+
+router.get('/owned', authenticate.loggedIn, (req, res, next) => {
+  Users.findById(req.user._id)
+    .populate('ownedEBooks')
+    .then((user) => {
+      res.statusCode = 200
+      res.json(user.ownedEBooks)
+    }, (err) => next(err))
+})
 module.exports = router

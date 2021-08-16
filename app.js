@@ -4,8 +4,8 @@ const path = require('path')
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
 const logger = require('morgan')
-// var session = require('express-session');
 const passport = require('passport')
+const cors = require('cors')
 
 const indexRouter = require('./routes/indexRouter')
 const usersRouter = require('./routes/usersRouter')
@@ -17,6 +17,10 @@ const uploadRouter = require('./routes/uploadRouter')
 
 const app = express()
 
+app.use(cors({
+  credentials: true,
+  origin: 'http://localhost:3000'
+}))
 app.use(logger('dev'))
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -24,11 +28,6 @@ app.use(cookieParser())
 app.use(bodyParser.json())
 app.use(express.static(path.join(__dirname, 'public')))
 
-// app.use(session({
-//   secret: 'ebook is the future',
-//   resave: false,
-//   saveUninitialized: true
-// }));
 app.use(passport.initialize())
 app.use(passport.session())
 
@@ -51,7 +50,7 @@ app.use(function (error, req, res, next) {
 })
 
 // catch 500
-app.use(function (error, req, res, next) {
+app.use(function (error, req, res) {
   res.status(500).send(error)
 })
 module.exports = app

@@ -7,7 +7,12 @@ describe('indexRouter testing: No authorization', () => {
   testHelper.suiteSetup()
   const agent = request.agent(app)
   testHelper.getPublic(agent)
-  testHelper.getUser(agent, { expectedStatus: 401 })
+  testHelper.getUser(agent, {
+    expectedStatus: 401,
+    expects: (res) => {
+      expect(res.body.message).to.equals('You need to be logged in to continue')
+    }
+  })
   testHelper.getAdmin(agent, { expectedStatus: 401 })
 })
 
@@ -90,6 +95,7 @@ describe('indexRouter testing: Failed Sign Up and Log in', () => {
     expectedStatus: 401,
     expects: (res) => {
       expect(res.headers).to.not.include.keys('set-cookie')
+      expect(res.body.message).to.equals('Log In failed')
     },
     body: {
       email: 'johndoe@gmail.com',

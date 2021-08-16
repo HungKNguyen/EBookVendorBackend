@@ -33,18 +33,28 @@ const User = new Schema({
   favEBooks: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'EBook',
-    required: true
+    required: true,
+    unique: true
   }],
   ownedEBooks: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'EBook'
+    ref: 'EBook',
+    required: true,
+    unique: true
+  }],
+  cart: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'EBook',
+    required: true,
+    unique: true
   }]
 }, {
   timestamps: true
 })
 
 User.plugin(passportLocalMongoose, {
-  usernameField: 'email'
+  usernameField: 'email',
+  usernameCaseInsensitive: true
 })
 
 module.exports = mongoose.model('User', User)

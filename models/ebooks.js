@@ -42,6 +42,8 @@ const ebookSchema = new Schema({
   timestamps: true
 })
 
+ebookSchema.index({ name: 'text', author: 'text', description: 'text', ISBN: 'text' })
+
 const EBooks = mongoose.model('EBook', ebookSchema)
 
 module.exports = EBooks
