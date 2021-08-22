@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const Comments = require('../models/comments')
 const authenticate = require('../authenticate')
+const mongoose = require('mongoose')
 
 /*
 GET to get all comments of a book paginate - STABLE
@@ -11,10 +12,10 @@ DELETE to delete your own comment - STABLE
  */
 router.route('/')
   .get((req, res, next) => {
-    Comments.find({ ebook: req.body.ebookId })
-      .sort({ [req.body.sort]: req.body.order })
-      .skip(req.body.skip)
-      .limit(10)
+    Comments.find({ ebook: req.query.ebookId })
+      .sort({ [req.query.sortField]: req.query.order, _id: -1 })
+      .skip(parseInt(req.query.skip))
+      .limit(5)
       .populate('user', ['firstname', 'lastname', 'image'])
       .then((comments) => {
         res.statusCode = 200
@@ -70,6 +71,29 @@ router.route('/')
         }
       }, (err) => next(err))
   })
+
+router.get('/total', (req, res, next) => {
+  Comments.countDocuments({ ebook: req.query.ebookId }, (err, count) => {
+    if (err) {
+      next(err)
+    } else {
+      res.statusCode = 200
+      res.json({ total: count })
+    }
+  })
+})
+
+router.get('/average', (req, res, next) => {
+  Comments.aggregate([
+    { $match: { ebook: mongoose.Types.ObjectId(req.query.ebookId) } },
+    { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+  ])
+    .then((average) => {
+      res.statusCode = 200
+      res.json({ average: average[0] ? average[0].avgRating : 0 })
+    })
+    .catch((err) => next(err))
+})
 
 /* DELETE admin force delete - STABLE */
 router.delete('/admin', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {

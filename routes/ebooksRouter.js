@@ -73,8 +73,8 @@ router.route('/')
       }, (err) => next(err))
   })
 
-router.get('/single/:ebookId', (req, res, next) => {
-  EBooks.findById(req.params.ebookId)
+router.get('/single', (req, res, next) => {
+  EBooks.findById(req.query.ebookId)
     .then((ebook) => {
       res.statusCode = 200
       res.json(ebook)
@@ -108,6 +108,17 @@ router.get('/bestseller', authenticate.loggedIn, authenticate.isAdmin, (req, res
       res.statusCode = 200
       res.json(ebooks)
     }, (err) => next(err))
+})
+
+router.get('/total', (req, res, next) => {
+  EBooks.count({}, (err, count) => {
+    if (err) {
+      next(err)
+    } else {
+      res.statusCode = 200
+      res.json({ total: count })
+    }
+  })
 })
 
 module.exports = router

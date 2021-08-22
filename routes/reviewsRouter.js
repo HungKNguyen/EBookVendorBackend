@@ -96,4 +96,15 @@ router.get('/user', authenticate.loggedIn, (req, res, next) => {
     }, (err) => next(err))
 })
 
+router.get('/total', (req, res, next) => {
+  Reviews.count({}, (err, count) => {
+    if (err) {
+      next(err)
+    } else {
+      res.statusCode = 200
+      res.json({ total: count })
+    }
+  })
+})
+
 module.exports = router
