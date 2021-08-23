@@ -50,7 +50,7 @@ app.use(function (error, req, res, next) {
 })
 
 // catch 500
-app.use(function (error, req, res) {
+app.use(function (error, res, next) {
   res.status(500).send(error)
 })
 module.exports = app
