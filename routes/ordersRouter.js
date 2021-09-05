@@ -115,7 +115,7 @@ router.get('/report', authenticate.loggedIn, authenticate.isAdmin,
       { $group: { _id: null, revenue: { $sum: '$amount' }, totalCount: { $sum: { $size: '$ebooks' } } } }
     ])
       .then((report) => {
-        res.locals.revenue = Math.round((report[0].revenue + Number.EPSILON) * 100) / 100
+        res.locals.revenue = report[0].revenue
         res.locals.totalCount = report[0].totalCount
         next()
       }, (err) => next(err))
