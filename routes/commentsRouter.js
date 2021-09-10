@@ -2,16 +2,20 @@ const express = require('express')
 const router = express.Router()
 const Comments = require('../models/comments')
 const authenticate = require('../authenticate')
+const mongoose = require('mongoose')
 
 /*
-GET to get all comments of a book - STABLE
+GET to get all comments of a book paginate - STABLE
 POST to post a comment on a book - STABLE
 PUT to modify your own comment - STABLE
 DELETE to delete your own comment - STABLE
  */
 router.route('/')
   .get((req, res, next) => {
-    Comments.find({ ebook: req.body.ebookId })
+    Comments.find({ ebook: req.query.ebookId })
+      .sort({ [req.query.sortField]: req.query.order, _id: -1 })
+      .skip(parseInt(req.query.skip))
+      .limit(5)
       .populate('user', ['firstname', 'lastname', 'image'])
       .then((comments) => {
         res.statusCode = 200
@@ -20,9 +24,9 @@ router.route('/')
   })
   .post(authenticate.loggedIn, (req, res, next) => {
     Comments.create({ user: req.user._id, ebook: req.body.ebookId, rating: req.body.rating, comment: req.body.comment })
-      .then((comment) => {
+      .then(() => {
         res.statusCode = 200
-        res.json(comment)
+        res.json({ message: 'You have successfully posted the comment' })
       }, (err) => next(err))
   })
   .put(authenticate.loggedIn, (req, res, next) => {
@@ -35,12 +39,12 @@ router.route('/')
           if (req.body.comment) {
             comment.comment = req.body.comment
           }
-          comment.save((err, comment) => {
+          comment.save((err) => {
             if (err) {
               next(err)
             } else {
               res.statusCode = 200
-              res.json(comment)
+              res.json({ message: 'You have successfully modified the comment' })
             }
           })
         } else {
@@ -53,12 +57,12 @@ router.route('/')
     Comments.findById(req.body.commentId)
       .then((comment) => {
         if (comment.user.equals(req.user._id)) {
-          comment.remove((err, comment) => {
+          comment.remove((err) => {
             if (err) {
               next(err)
             } else {
               res.statusCode = 200
-              res.json(comment)
+              res.json({ message: 'You have successfully deleted your comment' })
             }
           })
         } else {
@@ -68,12 +72,35 @@ router.route('/')
       }, (err) => next(err))
   })
 
+router.get('/total', (req, res, next) => {
+  Comments.countDocuments({ ebook: req.query.ebookId }, (err, count) => {
+    if (err) {
+      next(err)
+    } else {
+      res.statusCode = 200
+      res.json({ total: count })
+    }
+  })
+})
+
+router.get('/average', (req, res, next) => {
+  Comments.aggregate([
+    { $match: { ebook: mongoose.Types.ObjectId(req.query.ebookId) } },
+    { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+  ])
+    .then((average) => {
+      res.statusCode = 200
+      res.json({ average: average[0] ? average[0].avgRating : 0 })
+    })
+    .catch((err) => next(err))
+})
+
 /* DELETE admin force delete - STABLE */
 router.delete('/admin', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
   Comments.findByIdAndRemove(req.body.commentId)
-    .then((resp) => {
+    .then(() => {
       res.statusCode = 200
-      res.json(resp)
+      res.json({ message: 'You have successfully deleted the comment' })
     }, (err) => next(err))
     .catch((err) => next(err))
 })

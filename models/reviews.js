@@ -5,11 +5,12 @@ const reviewSchema = new Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    unique: true
   },
   rating: {
     type: Number,
-    min: 1,
+    min: 0,
     max: 5,
     required: true
   },

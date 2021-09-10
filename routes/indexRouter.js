@@ -5,77 +5,65 @@ const User = require('../models/users')
 
 router.get('/public', (req, res, next) => {
   res.statusCode = 200
-  res.json({ success: true, status: 'Public resources' })
+  res.json({ success: true, message: 'Public resources' })
 })
 
 router.get('/secret', authenticate.loggedIn, function (req, res) {
   res.statusCode = 200
-  res.json({ success: true, status: 'Hidden to non-user' })
+  res.json({ success: true, message: 'Hidden to non-user' })
 })
 
 router.get('/supersecret', authenticate.loggedIn, authenticate.isAdmin, function (req, res) {
   res.statusCode = 200
-  res.json({ success: true, status: 'Only for an admin' })
+  res.json({ success: true, message: 'Only for an admin' })
 })
 
 router.post('/login', authenticate.logInLocal,
   function (req, res) {
     const token = authenticate.getToken({ _id: req.user._id })
     res.statusCode = 200
-    res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 3600 * 1000 })
-    res.json({ success: true, status: 'You are successfully logged in!' })
+    res.cookie('jwt', token, { httpOnly: true, maxAge: req.body.rememberMe ? 168 * 3600 * 1000 : 24 * 3600 * 1000 })
+    const { hash, salt, ...profile } = req.user._doc
+    res.json(profile)
   }
 )
 
-router.get('/login/facebook', authenticate.logInFB)
-
-router.get('/login/facebook/callback', authenticate.logInFB, (req, res) => {
+router.post('/login/facebook', authenticate.logInFB, (req, res) => {
   const token = authenticate.getToken({ _id: req.user._id })
   res.statusCode = 200
   res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 3600 * 1000 })
-  res.json({ success: true, status: 'You are successfully logged in!' })
+  res.json(req.user)
 })
 
-router.get('/login/google', authenticate.logInGOOG)
-
-router.get('/login/google/callback', authenticate.logInGOOG, (req, res) => {
+router.post('/login/google', authenticate.logInGOOG, (req, res) => {
   const token = authenticate.getToken({ _id: req.user._id })
   res.statusCode = 200
   res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 3600 * 1000 })
-  res.json({ success: true, status: 'You are successfully logged in!' })
+  res.json(req.user)
 })
 
 router.get('/logout', function (req, res) {
   req.logout()
   res.statusCode = 200
   res.clearCookie('jwt', { path: '/' })
-  res.json({ success: true, status: 'You are successfully logged out!' })
+  res.json({ success: true, message: 'You are successfully logged out!' })
 })
 
 router.post('/signup', function (req, res, next) {
-  User.register(new User({ email: req.body.email }), req.body.password, (err, user) => {
+  User.register(new User({
+    email: req.body.email,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname
+  }), req.body.password, (err) => {
     if (err) {
-      res.statusCode = 500
-      res.json({ err: err })
+      next(err)
     } else {
-      if (req.body.firstname) {
-        user.firstname = req.body.firstname
-      }
-      if (req.body.lastname) {
-        user.lastname = req.body.lastname
-      }
-      user.save((err, user) => {
-        if (err) {
-          res.statusCode = 500
-          res.json({ err: err })
-          return
-        }
-        authenticate.logInLocal(req, res, () => {
-          const token = authenticate.getToken({ _id: req.user._id })
-          res.statusCode = 200
-          res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 3600 * 1000 })
-          res.json({ success: true, status: 'Registration Successful!' })
-        })
+      authenticate.logInLocal(req, res, () => {
+        const token = authenticate.getToken({ _id: req.user._id })
+        res.statusCode = 200
+        res.cookie('jwt', token, { httpOnly: true, maxAge: 24 * 3600 * 1000 })
+        const { hash, salt, ...profile } = req.user._doc
+        res.json(profile)
       })
     }
   })

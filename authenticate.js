@@ -2,30 +2,43 @@ const passport = require('passport')
 const User = require('./models/users')
 
 const JwtStrategy = require('passport-jwt').Strategy
-const FacebookStrategy = require('passport-facebook').Strategy
-const GoogleStrategy = require('passport-google-oauth2').Strategy
+const FacebookTokenStrategy = require('passport-facebook-token')
+const GoogleTokenStrategy = require('passport-google-token').Strategy
 const jwt = require('jsonwebtoken')
 
 // Local strategy
 
 passport.use(User.createStrategy())
-exports.logInLocal = passport.authenticate('local')
+exports.logInLocal = (req, res, next) => {
+  passport.authenticate('local', (err, user) => {
+    if (err) {
+      return next(err)
+    }
+    if (!user) {
+      return res.status(401).send({ success: false, message: 'Log In failed' })
+    }
+    req.login(user, function (err) {
+      if (err) {
+        return next(err)
+      }
+      return next()
+    })
+  })(req, res, next)
+}
 
 // Facebook strategy
 
-passport.use(new FacebookStrategy({
+passport.use(new FacebookTokenStrategy({
   clientID: process.env.FB_CLIENT_ID,
-  clientSecret: process.env.FB_CLIENT_SECRET,
-  callbackURL: '/api/login/facebook/callback',
-  profileFields: ['id', 'name', 'emails']
+  clientSecret: process.env.FB_CLIENT_SECRET
 },
-function (accessToken, refreshToken, profile, cb) {
+function (accessToken, refreshToken, profile, done) {
   User.findOne({ FbOAuth: profile.id }, (err, user) => {
     if (err) {
-      return cb(err, false)
+      return done(err, false)
     }
     if (!err && user !== null) {
-      return cb(null, user)
+      return done(null, user)
     } else {
       User.create({
         FbOAuth: profile.id,
@@ -33,29 +46,28 @@ function (accessToken, refreshToken, profile, cb) {
         firstname: profile.name.givenName,
         lastname: profile.name.familyName
       }, (err, user) => {
-        return cb(err, user)
+        return done(err, user)
       })
     }
   })
 }
 ))
 
-exports.logInFB = passport.authenticate('facebook', { scope: ['email'] })
+exports.logInFB = passport.authenticate('facebook-token')
 
 // Google strategy
 
-passport.use(new GoogleStrategy({
+passport.use(new GoogleTokenStrategy({
   clientID: process.env.GOOG_CLIENT_ID,
-  clientSecret: process.env.GOOG_CLIENT_SECRET,
-  callbackURL: '/api/login/google/callback'
+  clientSecret: process.env.GOOG_CLIENT_SECRET
 },
-function (accessToken, refreshToken, profile, cb) {
+function (accessToken, refreshToken, profile, done) {
   User.findOne({ GoogleOAuth: profile.id }, (err, user) => {
     if (err) {
-      return cb(err, false)
+      return done(err, false)
     }
     if (!err && user !== null) {
-      return cb(null, user)
+      return done(null, user)
     } else {
       User.create({
         GoogleOAuth: profile.id,
@@ -63,14 +75,14 @@ function (accessToken, refreshToken, profile, cb) {
         firstname: profile.name.givenName,
         lastname: profile.name.familyName
       }, (err, user) => {
-        return cb(err, user)
+        return done(err, user)
       })
     }
   })
 }
 ))
 
-exports.logInGOOG = passport.authenticate('google', { scope: ['profile', 'email'] })
+exports.logInGOOG = passport.authenticate('google-token')
 
 // JWT strategy, give user token once they pass one of the above strategies
 
@@ -100,7 +112,22 @@ exports.getToken = (user) => {
   return jwt.sign(user, process.env.SECRET_KEY, { expiresIn: '24h' })
 }
 
-exports.loggedIn = passport.authenticate('jwt', { session: false })
+exports.loggedIn = (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, user) => {
+    if (err) {
+      return next(err)
+    }
+    if (!user) {
+      return res.status(401).send({ success: false, message: 'You need to be logged in to continue' })
+    }
+    req.login(user, function (err) {
+      if (err) {
+        return next(err)
+      }
+      return next()
+    })
+  })(req, res, next)
+}
 
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())

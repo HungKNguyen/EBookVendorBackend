@@ -5,6 +5,7 @@ const Ebooks = require('../models/ebooks')
 const Users = require('../models/users')
 const authenticate = require('../authenticate')
 const mongoose = require('mongoose')
+const moment = require('moment')
 
 /*
 GET to get user's orders - STABLE
@@ -20,34 +21,38 @@ router.route('/')
       }, (err) => next(err))
   })
   .post(authenticate.loggedIn, (req, res, next) => {
-    /* Create ORDER object */
     const ids = req.body.ebookIds.map((id) => mongoose.Types.ObjectId(id))
     Ebooks.aggregate([
       { $match: { _id: { $in: ids } } },
-      { $group: { _id: null, amount: { $sum: '$price' } } },
-      { $project: { _id: 0, amount: 1 } }
+      {
+        $group: {
+          _id: null,
+          amount: { $sum: '$price' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          amount: 1
+        }
+      }
     ])
-      .then((respond) => {
+      .then((response) => {
         const today = new Date()
         return Orders.create({
           user: req.user._id,
           ebooks: req.body.ebookIds,
-          amount: respond[0].amount,
+          amount: response[0].amount,
           month: today.getMonth() + 1,
           year: today.getFullYear()
         })
       })
-      .then((order) => {
-        res.locals.order = order
-        next()
-      }, (err) => next(err))
-  }, (req, res, next) => {
-    /* UPDATE the book sold amount - STABLE */
-    Ebooks.updateMany({ _id: { $in: req.body.ebookIds } }, { $inc: { sold: 1 } })
-      .then(() => next(), (err) => next(err))
-  }, (req, res, next) => {
-    /* UPDATE that user own the books - TODO: CHECK FOR DUPLICATES WHEN WORKING FOR REAL */
-    Users.findById(req.user._id)
+      .then(() => {
+        return Ebooks.updateMany({ _id: { $in: req.body.ebookIds } }, { $inc: { sold: 1 } })
+      })
+      .then(() => {
+        return Users.findById(req.user._id)
+      })
       .then((user) => {
         user.ownedEBooks.push({ $each: req.body.ebookIds })
         user.save((err, user) => {
@@ -55,21 +60,49 @@ router.route('/')
             next(err)
           } else {
             res.statusCode = 200
-            res.json(res.locals.order)
+            res.json({ message: 'You have successfully placed your order' })
           }
         })
-      }, (err) => next(err))
-  }
-  )
+      })
+      .catch((err) => next(err))
+  })
 
-/* GET all orders - STABLE */
 router.get('/admin', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
   Orders.find({})
+    .sort({ createdAt: -1 })
+    .skip(req.body.skip)
+    .limit(10)
     .populate('user', ['email', 'firstname', 'lastname'])
     .populate('ebooks', 'name')
     .then((orders) => {
       res.statusCode = 200
       res.json(orders)
+    }, (err) => next(err))
+})
+
+/* GET 3 recent order - STABLE */
+router.get('/admin/recent', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
+  Orders.find({})
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .populate('user', ['email', 'firstname', 'lastname'])
+    .populate('ebooks', 'name')
+    .then((orders) => {
+      res.statusCode = 200
+      res.json(orders)
+    }, (err) => next(err))
+})
+
+router.get('/admin/summary', authenticate.loggedIn, authenticate.isAdmin, (req, res, next) => {
+  const startDate = moment().subtract(3, 'months').startOf('month').toISOString()
+  const endDate = moment().endOf('month').toISOString()
+  Orders.aggregate([
+    { $match: { createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) } } },
+    { $group: { _id: { month: { $month: '$createAt' }, year: { $year: '$createAt' } }, revenue: { $sum: '$amount' }, count: { $sum: { $size: '$ebooks' } } } }
+  ])
+    .then((report) => {
+      res.statusCode = 200
+      res.json(report)
     }, (err) => next(err))
 })
 
@@ -82,7 +115,7 @@ router.get('/report', authenticate.loggedIn, authenticate.isAdmin,
       { $group: { _id: null, revenue: { $sum: '$amount' }, totalCount: { $sum: { $size: '$ebooks' } } } }
     ])
       .then((report) => {
-        res.locals.revenue = Math.round((report[0].revenue + Number.EPSILON) * 100) / 100
+        res.locals.revenue = report[0].revenue
         res.locals.totalCount = report[0].totalCount
         next()
       }, (err) => next(err))
@@ -103,8 +136,7 @@ router.get('/report', authenticate.loggedIn, authenticate.isAdmin,
       }
     ])
       .then((report) => {
-        res.locals.month = req.body.month
-        res.locals.year = req.body.year
+        res.locals.date = new Date(req.body.year, req.body.month, 1).toLocaleString('default', { year: 'numeric', month: 'short' })
         res.locals.ebooksCount = report
         res.statusCode = 200
         res.json(res.locals)
