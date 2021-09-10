@@ -1,0 +1,3 @@
+[submodule "EBookVendorFrontend"]
+	path = EBookVendorFrontend
+	url = https://github.com/HungKNguyen/EBookVendorFrontend.git

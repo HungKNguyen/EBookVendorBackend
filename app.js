@@ -26,6 +26,7 @@ app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(bodyParser.json())
+app.use(express.static(path.join(__dirname, 'EBookVendorFrontend', 'build')))
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.use(passport.initialize())
@@ -39,18 +40,7 @@ app.use('/api/reviews', reviewsRouter)
 app.use('/api/ebooks', ebooksRouter)
 app.use('/api/upload', uploadRouter)
 
-// catch 404
-app.use(function (error, req, res, next) {
-  if (error) {
-    next(error)
-  } else {
-    res.statusCode = 404
-    res.end('Not found')
-  }
-})
-
-// catch 500
-app.use(function (error, res, next) {
-  res.status(500).send(error)
+app.use((req, res, next) => {
+  res.sendFile(path.join(__dirname, 'EBookVendorFrontend', 'build', 'index.html'))
 })
 module.exports = app
