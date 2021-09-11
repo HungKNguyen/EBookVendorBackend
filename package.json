@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node bin/www",
-    "heroku-postbuild": "cd EBookVendorFrontend && npm install && npm run build",
+    "heroku-prebuild": "cd EBookVendorFrontend && npm install && npm run build",
     "test": "mocha --recursive --exit --require \"test/hooks.js\"",
     "lint": "eslint \"**/*.js\"",
     "lint-fix": "eslint \"**/*.js\" --fix",
