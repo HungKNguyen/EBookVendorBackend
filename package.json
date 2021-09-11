@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "cd EBookVendorFrontend && npm run build && cd .. && node bin/www",
-    "heroku-postbuild": "cd EBookVendorFrontend && npm install",
+    "start": "node bin/www",
+    "heroku-postbuild": "cd EBookVendorFrontend && npm install && npm run build",
     "test": "mocha --recursive --exit --require \"test/hooks.js\"",
     "lint": "eslint \"**/*.js\"",
     "lint-fix": "eslint \"**/*.js\" --fix",
